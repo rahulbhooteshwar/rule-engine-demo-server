@@ -5,27 +5,16 @@ const ruleSchema = new mongoose.Schema({
     required: 'Title is required',
     text: true
   },
-  region: {
+  regions: [{
     required: 'Region is required',
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Region'
-  },
+  }],
   conditions: {
     type: [
       {
-        attribute: {
-          type: String,
-          required: 'condition attribute  is required',
-        },
-        values: {
-          type: [
-            {
-              type: String,
-              required: 'condition value is required'
-            }
-          ],
-          required: 'Values array is required'
-        }
+        attribute: String,
+        inValues:[String]
       }
     ],
     required: "Conditions are required"

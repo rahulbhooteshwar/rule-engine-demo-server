@@ -4,7 +4,8 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import cors from 'cors';
 
 import regionRouter from './routes/regions';
 import countryRouter from './routes/countries';
@@ -19,6 +20,7 @@ const app = express();
 dotenv.config();
 
 app.use(logger('dev'));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

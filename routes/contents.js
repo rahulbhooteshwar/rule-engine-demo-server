@@ -4,10 +4,18 @@ import Content from '../models/content';
 const router = express.Router();
 
 
-router.get('/', async ({query:{region}}, res, next)=> {
+router.get('/', async (_req, res, next)=> {
   try {
-    const contents = region ? await Content.find({region}) : await Content.find();
+    const contents = await Content.find();
     res.json(contents)
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+router.get('/:_id', async ({ params: { _id } }, res, next) => {
+  try {
+    const content = await Content.findOne({_id}).populate({path: 'rules', select: '_id title'})
+    res.json(content)
   } catch (error) {
     res.status(500).send(error);
   }
@@ -26,7 +34,8 @@ router.post('/', async ({body: {title, rules, ruleMatchType}}, res, next)=> {
 
 router.put('/:_id', async ({ params: {_id}, body }, res, next) => {
   try {
-    const content = await Content.findOneAndUpdate({ _id: _id }, { $set: body }, { new: true }).exec();
+    const content = await Content.findOneAndUpdate({ _id: _id }, { $set: body }, { new: true })
+      .populate({path: 'rules', select: '_id title'}).exec()
     res.json(content)
   } catch (error) {
     res.status(500).send(error);
