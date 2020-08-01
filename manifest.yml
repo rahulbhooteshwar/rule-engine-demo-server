@@ -1,0 +1,6 @@
+---
+applications:
+- name: rule-engine-demo-server
+  buildpacks:
+  - nodejs_buildpack
+  command: npm start
