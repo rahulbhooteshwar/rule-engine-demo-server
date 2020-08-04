@@ -14,6 +14,7 @@ import languageRouter from './routes/languages';
 import userRouter from './routes/users';
 import ruleRouter from './routes/rules';
 import contentRouter from './routes/contents';
+import targettedContents from './routes/targetted-contents';
 import issuerSegmentationRouter from './routes/issuer-segmentations';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/users', userRouter);
 app.use('/rules', ruleRouter);
 app.use('/contents', contentRouter);
 app.use('/issuer-segmentations', issuerSegmentationRouter);
+app.use('/targetted-contents', targettedContents);
 // catch 404 and forward to error handler
 app.use((req, res, next)=> {
   next(createError(404));

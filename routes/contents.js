@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get('/', async (_req, res, next)=> {
   try {
-    const contents = await Content.find();
+    const contents = await Content.find()
+    .sort({createdAt: -1})
     res.json(contents)
   } catch (error) {
     res.status(500).send(error);

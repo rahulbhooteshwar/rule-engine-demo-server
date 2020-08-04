@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 import Rule from '../models/rule';
 import market from '../models/market';
 import country from '../models/country';
@@ -15,7 +15,7 @@ router.get('/', async ({ query: { regions, keyword } }, res, next) => {
     criteria = { regions: { $in: regions } }
   }
   if (keyword) {
-    criteria = {...criteria, $text: {$search: keyword, $caseSensitive: false}}
+    criteria = {...criteria, title: {$regex: new RegExp(`.*${keyword}.*`, 'mig')}}
   }
   try {
     const entityMap = { country, lang, market, issuerSegmentation }
@@ -51,6 +51,9 @@ router.get('/:_id', async ({params: {_id}}, res, next) => {
 
 
 router.post('/', async ({ body: { title, regions, conditions, conditionMatchType } }, res, next) => {
+  if (!conditions || conditions.length === 0) {
+    return res.status(400).send({message: 'Rules without conditions have no significance!'});
+  }
   try {
     const rule = new Rule({ title, regions, conditions, conditionMatchType });
     await rule.save()
@@ -61,6 +64,9 @@ router.post('/', async ({ body: { title, regions, conditions, conditionMatchType
 });
 
 router.put('/:_id', async ({ params: { _id }, body }, res, next) => {
+  if (!body.conditions || body.conditions.length === 0) {
+    return res.status(400).send({message: 'Rules without conditions have no significance!'});
+  }
   try {
     const rule = await Rule.findOneAndUpdate({ _id: _id }, { $set: body }, { new: true }).exec();
     res.json(rule)
