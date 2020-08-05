@@ -82,7 +82,7 @@ router.get('/:userId', async ({ params: { userId } }, res, _next) => {
         {
           "$replaceRoot": { "newRoot": "$document" }
         }
-      ])
+      ]).sort({ updatedAt: -1 })
       contents = await Content.populate(contents, { path: 'rules', select: '_id, title' })
       res.send(contents)
     } else {
