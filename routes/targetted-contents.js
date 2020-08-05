@@ -56,17 +56,7 @@ router.get('/:userId', async ({ params: { userId } }, res, _next) => {
       const filteredRuleIds = filteredRules.map(({ _id }) => _id)
 
       // GET THE FILTERED CONTENTS, BASED on RULES
-      const noRulesOrMatchAny = await Content.find({
-        $or: [
-          {
-            'rules.0': {$exists: false}
-          },
-          {
-            ruleMatchType: 'ANY', rules: {$in: filteredRuleIds}
-          }
-        ]
-      })
-      const matchAll = await Content.aggregate([
+      let contents = await Content.aggregate([
         {
           $project: {
             document: "$$ROOT",
@@ -75,7 +65,17 @@ router.get('/:userId', async ({ params: { userId } }, res, _next) => {
         },
         {
           $match: {
-            isSubset: true, 'document.ruleMatchType': 'ALL', 'document.rules.0': {$exists: true}
+            $or: [
+              { // contents with empty rules
+                'document.rules.0': { $exists: false }
+              },
+              {  // contents with ruleMatchType ANY & having partial match with user applicable rules
+                'document.ruleMatchType': 'ANY', 'document.rules': { $in: filteredRuleIds }
+              },
+              {  // contents with ruleMatchType ALL & having rule list as a complete subset of user applicable rules
+                'document.ruleMatchType': 'ALL', isSubset: true
+              }
+            ]
           }
         },
         // to project back all fields
@@ -83,8 +83,8 @@ router.get('/:userId', async ({ params: { userId } }, res, _next) => {
           "$replaceRoot": { "newRoot": "$document" }
         }
       ])
-      const final = await Content.populate(noRulesOrMatchAny.concat(matchAll), { path: 'rules', select: '_id, title' })
-      res.send(final)
+      contents = await Content.populate(contents, { path: 'rules', select: '_id, title' })
+      res.send(contents)
     } else {
       throw new Error('Please provide valid user id for targetted content')
     }
