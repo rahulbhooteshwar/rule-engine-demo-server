@@ -1,9 +1,5 @@
 import express, { response } from 'express';
 import Rule from '../models/rule';
-import market from '../models/market';
-import country from '../models/country';
-import lang from '../models/language';
-import issuerSegmentation from '../models/issuer-segmentation';
 
 const router = express.Router();
 
@@ -15,34 +11,28 @@ router.get('/', async ({ query: { regions, keyword } }, res, next) => {
     criteria = { regions: { $in: regions } }
   }
   if (keyword) {
-    criteria = {...criteria, title: {$regex: new RegExp(`.*${keyword}.*`, 'mig')}}
+    criteria = { ...criteria, title: { $regex: new RegExp(`.*${keyword}.*`, 'mig') } }
   }
   try {
-    const entityMap = { country, lang, market, issuerSegmentation }
-    const rules = await Rule.find(criteria).populate({ path: 'regions', select: '_id title' }).sort({ createdAt: -1 })
-    let populatedRules = rules.map(async rule => {
-      let conditions = rule.conditions.map(async condition => {
-        const data = await entityMap[condition.attribute].find({ _id: { $in: condition.inValues } }, '_id, title')
-        // console.log(condition.attribute, data)
-        return {attribute: condition.attribute, inValues: data}
-      })
-      // We need await as map will return Promises beacuse of async operations
-      conditions = await Promise.all(conditions)
-      const { _id, title, conditionMatchType, regions } = rule;
-      return { _id, title, conditionMatchType, regions, conditions: conditions}
-    })
-      // We need await as map will return Promises beacuse of async operations
-    //https://zellwk.com/blog/async-await-in-loops/
-    populatedRules = await Promise.all(populatedRules)
-    res.json(populatedRules)
+    const rules = await Rule.find(criteria)
+      .populate([
+        { path: 'regions' },
+        { path: 'countries' },
+        { path: 'languages' },
+        { path: 'markets' },
+        { path: 'issuerSegmentations' }
+      ])
+      .sort({ createdAt: -1 })
+    res.json(rules)
   } catch (error) {
+    console.log(error)
     res.status(500).send(error);
   }
 });
 
-router.get('/:_id', async ({params: {_id}}, res, next) => {
+router.get('/:_id', async ({ params: { _id } }, res, next) => {
   try {
-    const rule = await Rule.findOne({_id: _id})
+    const rule = await Rule.findOne({ _id: _id })
     res.json(rule)
   } catch (error) {
     res.status(500).send(error);
@@ -50,12 +40,9 @@ router.get('/:_id', async ({params: {_id}}, res, next) => {
 });
 
 
-router.post('/', async ({ body: { title, regions, conditions, conditionMatchType } }, res, next) => {
-  if (!conditions || conditions.length === 0) {
-    return res.status(400).send({message: 'Rules without conditions have no significance!'});
-  }
+router.post('/', async ({ body }, res, next) => {
   try {
-    const rule = new Rule({ title, regions, conditions, conditionMatchType });
+    const rule = new Rule({ ...body });
     await rule.save()
     res.json(rule)
   } catch (error) {
@@ -64,9 +51,6 @@ router.post('/', async ({ body: { title, regions, conditions, conditionMatchType
 });
 
 router.put('/:_id', async ({ params: { _id }, body }, res, next) => {
-  if (!body.conditions || body.conditions.length === 0) {
-    return res.status(400).send({message: 'Rules without conditions have no significance!'});
-  }
   try {
     const rule = await Rule.findOneAndUpdate({ _id: _id }, { $set: body }, { new: true }).exec();
     res.json(rule)

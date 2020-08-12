@@ -10,15 +10,22 @@ const ruleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Region'
   }],
-  conditions: {
-    type: [
-      {
-        attribute: String,
-        inValues:[String]
-      }
-    ],
-    required: "Conditions are required"
-  },
+  countries: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Country'
+  }],
+  languages: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Language'
+  }],
+  markets: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Market'
+  }],
+  issuerSegmentations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'IssuerSegmentation'
+  }],
   conditionMatchType: {
     type: String,
     enum: ['ALL', 'ANY'],
