@@ -6,17 +6,12 @@ on:
     - master
 
 jobs:
-  deploy:
-    runs-on: ubuntu-18.04
+  build:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@master
-    - name: Deploy to PCF
-      uses: citizen-of-planet-earth/cf-cli-action@master
-      with:
-        cf_api: ${{ secrets.CF_API }}
-        cf_username: ${{ secrets.CF_USER }}
-        cf_password: ${{ secrets.CF_PASSWORD }}
-        cf_org: ${{ secrets.CF_ORG }}
-        cf_space: ${{ secrets.CF_SPACE }}
-        command: push -f manifest.yml
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.6.8 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "rule-engine-api" #Must be unique in Heroku
+          heroku_email: "rahul.bhooteshwar@gmail.com"
